@@ -5,14 +5,10 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from paddleocr import PaddleOCR
 
-import src.text_inpaint.ocr as ocr
-from src.text_inpaint.ocr import recalcular_cuadricula_rotada
-from src.text_inpaint.ocr import juntar_imagenes_vertical, rellenar_imagen_uniformemente
-# from ocr import recortar_imagen_uniformemente
-# from ocr import comparar_imagenes
-# from ocr import reemplazar_parte_imagen
-
+from src.text_inpaint.ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
+from src.text_inpaint.image_utils import rellenar_imagen_uniformemente, juntar_imagenes_vertical
 from src.text_inpaint.utils import separar_cadenas, mostrar_diccionario_ascii
+from src.text_inpaint.crop_compare import recortar_imagen
 
 def simple_inpaint(image, bounds, word, slider_step=30, slider_guidance=2, slider_batch=6):
     """
@@ -88,7 +84,7 @@ def process_image(palabra,
         The original bounding box coordinates of the word in the image
     """
     # Step 1: Resize and crop the image based on the bounding box and the word to be replaced
-    img_resized, coordenadas_originales = ocr.recortar_imagen(bounds, palabra, img_array, alto=height, ancho=width)
+    img_resized, coordenadas_originales = recortar_imagen(bounds, palabra, img_array, alto=height, ancho=width)
     img_pil = Image.fromarray(img_resized).convert('RGB')
     # juntamos la misma imagen verticalmente para que sea cuadrada junto al papping en blanco
     # unicamente cuando el doble del alto sea menor que que 512px que lo que admite el modelo
@@ -96,7 +92,6 @@ def process_image(palabra,
         img_pil = juntar_imagenes_vertical(img_pil, img_pil)
 
     # dimesion de la imagen nueva con la adición vertical para futura restauración del padding
-    # dim_img_pil = img_pil.size # comentado por ahora
     img_pil = rellenar_imagen_uniformemente(img_pil, dimensiones_objetivo=(512, 512))
         
     # Save the cropped and resized image for reference (optional)
@@ -107,7 +102,7 @@ def process_image(palabra,
     model = PaddleOCR(use_angle_cls=True, lang='es')  # 'es' para español
     # Step 2: Perform OCR on the resized and cropped image to identify word bounding boxes
     bounds_resized = model.ocr(np.array(img_pil))
-    bounds_resized = ocr.convert_paddle_to_easyocr(bounds_resized)
+    bounds_resized = convert_paddle_to_easyocr(bounds_resized)
     
     # mostramos otra vez las palabras detectadas, pero de la imagen recortada 512x512
     # reason: para que el usuario pueda ver las palabras detectadas y elegir la que desea reemplazar
