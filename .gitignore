@@ -1,0 +1,10 @@
+*.jpg
+*.png
+*.pt
+/venv
+/.idea
+/tmp
+# ignore pycache
+__pycache__
+/images
+/notebooks
