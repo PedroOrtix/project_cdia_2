@@ -1,14 +1,13 @@
-from src.text_inpaint.td_inpaint import inpaint
-from src.text_inpaint.inpaint_functions import parse_bounds
+from td_inpaint import inpaint
+from inpaint_functions import parse_bounds
+from ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
+from image_utils import rellenar_imagen_uniformemente, juntar_imagenes_vertical
+from utils import separar_cadenas, mostrar_diccionario_ascii
+from crop_compare import recortar_imagen
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from paddleocr import PaddleOCR
-
-from src.text_inpaint.ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
-from src.text_inpaint.image_utils import rellenar_imagen_uniformemente, juntar_imagenes_vertical
-from src.text_inpaint.utils import separar_cadenas, mostrar_diccionario_ascii
-from src.text_inpaint.crop_compare import recortar_imagen
 
 def simple_inpaint(image, bounds, word, slider_step=30, slider_guidance=2, slider_batch=6):
     """
@@ -119,10 +118,9 @@ def process_image(palabra,
     palabra = input()
 
     # Step 3: Find the bounding box that matches the word to be replaced
-    # buscar mejor solución para encontrar la palabra en la lista de palabras detectadas, ya que se puede repetir
-    # debido a la posible duplicidad de palabras en la imagen
-    # TEMPORAL!!!
-    right_bounds = [[bound for bound in bounds_resized if bound[1] == palabra][0]]
+    right_bounds = next(([bound] for bound in bounds_resized if bound[1] == palabra), None)
+    if right_bounds is None:
+        raise ValueError(f"No se encontró la palabra '{palabra}' en la imagen")
 
     # Step 4: Recalculate the bounding box if necessary (e.g., if the replacement word is longer)
     if palabra.isalpha() and len(palabra) < len(replace.strip()):

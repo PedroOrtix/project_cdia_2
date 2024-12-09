@@ -1,7 +1,6 @@
 import re
 from prettytable import PrettyTable
 
-
 def separar_cadenas(lista):
     # Inicializar el diccionario
     resultado = {
