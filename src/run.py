@@ -11,16 +11,18 @@ from paddleocr import PaddleOCR
 
 def simple_inpaint(image, bounds, word, slider_step=30, slider_guidance=2, slider_batch=6):
     """
-    Perform inpainting on the given image using the specified bounds and word.
+    Realiza el proceso de inpainting en la imagen dada utilizando los límites y palabra especificados.
+    
     Args:
-        image (PIL.Image): The image to inpaint.
-        bounds (str): The bounds for inpainting.
-        word (str): The word for inpainting.
-        slider_step (int, optional): The step size for the slider. Defaults to 25.
-        slider_guidance (float, optional): The guidance value for the slider. Defaults to 2.5.
-        slider_batch (int, optional): The batch size for the slider. Defaults to 4.
+        image (PIL.Image): La imagen en la que se realizará el inpainting.
+        bounds (str): Los límites para el inpainting.
+        word (str): La palabra para el inpainting.
+        slider_step (int, opcional): El tamaño del paso para el slider. Por defecto 30.
+        slider_guidance (float, opcional): El valor de guía para el slider. Por defecto 2.
+        slider_batch (int, opcional): El tamaño del lote para el slider. Por defecto 6.
+        
     Returns:
-        The inpainted image, coordinates
+        tuple: La imagen con el inpainting realizado y las coordenadas.
     """
     global_dict = {}
     global_dict["stack"] = parse_bounds(bounds, word)
@@ -45,42 +47,42 @@ def process_image(palabra,
                     show_plot=False,
                     save_intermediate_images=True):
     """
-    Processes an image by identifying a word, replacing it with a new word, and returning
-    the modified images. Optionally, displays the modified images in a grid.
+    Procesa una imagen identificando una palabra, reemplazándola por una nueva y devolviendo
+    las imágenes modificadas. Opcionalmente, muestra las imágenes modificadas en una cuadrícula.
 
-    Parameters:
+    Parámetros:
     ----------
     palabra : str
-        The word to be identified and replaced in the image.
+        La palabra a identificar y reemplazar en la imagen.
     replace : str
-        The word that will replace the identified word.
+        La palabra que reemplazará a la palabra identificada.
     bounds : list
-        The bounding box coordinates of the word in the original image.
+        Las coordenadas del cuadro delimitador de la palabra en la imagen original.
     img_array : np.ndarray
-        The image array where the word is located.
-    height : int, optional
-        The height of the resized image. Default is 512.
-    width : int, optional
-        The width of the resized image. Default is 512.
-    slider_step : int, optional
-        The step size for the slider. Default is 30.
-    slider_guidance : float, optional
-        The guidance value for the slider. Default is 2.
-    slider_batch : int, optional
-        The batch size for the slider. Default is 6.
-    show_plot : bool, optional
-        If True, displays the modified images in a grid. Default is False.
-    save_intermediate_images : bool, optional
-        If True, saves the intermediate images during the processing. Default is True.
+        El array de la imagen donde se encuentra la palabra.
+    height : int, opcional
+        La altura de la imagen redimensionada. Por defecto 512.
+    width : int, opcional
+        El ancho de la imagen redimensionada. Por defecto 512.
+    slider_step : int, opcional
+        El tamaño del paso para el slider. Por defecto 30.
+    slider_guidance : float, opcional
+        El valor de guía para el slider. Por defecto 2.
+    slider_batch : int, opcional
+        El tamaño del lote para el slider. Por defecto 6.
+    show_plot : bool, opcional
+        Si es True, muestra las imágenes modificadas en una cuadrícula. Por defecto False.
+    save_intermediate_images : bool, opcional
+        Si es True, guarda las imágenes intermedias durante el procesamiento. Por defecto True.
 
-    Returns:
+    Retorna:
     -------
-    list of PIL.Image
-        A list containing the modified images after the word replacement.
+    list de PIL.Image
+        Una lista que contiene las imágenes modificadas después del reemplazo de la palabra.
     right_bounds : list
-        The bounding box coordinates of the identified word in the modified image.
+        Las coordenadas del cuadro delimitador de la palabra identificada en la imagen modificada.
     coordenadas_originales : list
-        The original bounding box coordinates of the word in the image
+        Las coordenadas originales del cuadro delimitador de la palabra en la imagen.
     """
     # Step 1: Resize and crop the image based on the bounding box and the word to be replaced
     img_resized, coordenadas_originales = recortar_imagen(bounds, palabra, img_array, alto=height, ancho=width)

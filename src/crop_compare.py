@@ -4,6 +4,20 @@ from PIL import Image
 from .temperature_utils import calcular_temperatura, ajustar_temperatura
 
 def recortar_imagen(lista_palabras, palabra, img_array, ancho=512, alto=512):
+    """
+    Recorta una sección de la imagen alrededor de una palabra específica.
+    
+    Args:
+        lista_palabras (list): Lista de detecciones de palabras con sus coordenadas.
+        palabra (str): Palabra a buscar en la imagen.
+        img_array (numpy.ndarray): Imagen en formato array de numpy.
+        ancho (int, opcional): Ancho deseado del recorte. Por defecto 512.
+        alto (int, opcional): Alto deseado del recorte. Por defecto 512.
+        
+    Returns:
+        tuple: Tupla conteniendo la imagen recortada y las coordenadas del recorte (x_min, y_min, x_max, y_max).
+               Retorna (None, None) si no se encuentra la palabra.
+    """
     altura_img, anchura_img, _ = img_array.shape
     mitad_ancho = ancho // 2
     mitad_alto = alto // 2
@@ -54,6 +68,19 @@ def recortar_imagen(lista_palabras, palabra, img_array, ancho=512, alto=512):
     return None, None
 
 def comparar_imagenes(image_path1, image_path2, coordinates, save_path=False, adjust_temp=False):
+    """
+    Compara dos imágenes mostrándolas lado a lado, con opción de ajuste de temperatura.
+    
+    Args:
+        image_path1 (str): Ruta de la primera imagen.
+        image_path2 (str): Ruta de la segunda imagen.
+        coordinates (list): Lista de coordenadas [x1, y1, x2, y2, x3, y3, x4, y4] para el recorte.
+        save_path (str, opcional): Ruta donde guardar las imágenes comparadas. Por defecto False.
+        adjust_temp (bool, opcional): Si se debe ajustar la temperatura de color. Por defecto False.
+        
+    Returns:
+        PIL.Image: Imagen combinada con ambas imágenes lado a lado.
+    """
     imagen_original = cv2.imread(image_path1)
     imagen_modificada = cv2.imread(image_path2)
 
@@ -90,6 +117,18 @@ def comparar_imagenes(image_path1, image_path2, coordinates, save_path=False, ad
     return comparison_image
 
 def reemplazar_parte_imagen(original_image_pil, modified_image_pil, coordinates, adjust_temp=False):
+    """
+    Reemplaza una sección de la imagen original con la correspondiente sección de la imagen modificada.
+    
+    Args:
+        original_image_pil (PIL.Image): Imagen original.
+        modified_image_pil (PIL.Image): Imagen modificada.
+        coordinates (list): Lista de coordenadas [x1, y1, x2, y2, x3, y3, x4, y4] para el reemplazo.
+        adjust_temp (bool, opcional): Si se debe ajustar la temperatura de color. Por defecto False.
+        
+    Returns:
+        PIL.Image: Imagen combinada con la sección reemplazada.
+    """
     original_image_cv2 = cv2.cvtColor(np.array(original_image_pil), cv2.COLOR_RGB2BGR)
     modified_image_cv2 = cv2.cvtColor(np.array(modified_image_pil), cv2.COLOR_RGB2BGR)
 

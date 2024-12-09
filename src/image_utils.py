@@ -6,11 +6,26 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 def display(image):
+    """
+    Muestra una imagen utilizando matplotlib.
+    
+    Args:
+        image (PIL.Image o numpy.ndarray): Imagen a mostrar.
+    """
     plt.imshow(image)
     plt.axis('off')
     plt.show()
 
 def stitch(images):
+    """
+    Une horizontalmente una lista de imágenes.
+    
+    Args:
+        images (list): Lista de imágenes PIL.Image a unir.
+        
+    Returns:
+        PIL.Image: Imagen resultante de la unión horizontal.
+    """
     widths, heights = zip(*(i.size for i in images))
     total_width = sum(widths)
     max_height = max(heights)
@@ -22,6 +37,16 @@ def stitch(images):
     return stitched
 
 def juntar_imagenes_vertical(imagen_upper, imagen_lower):
+    """
+    Une verticalmente dos imágenes.
+    
+    Args:
+        imagen_upper (PIL.Image): Imagen superior.
+        imagen_lower (PIL.Image): Imagen inferior.
+        
+    Returns:
+        PIL.Image: Imagen resultante de la unión vertical.
+    """
     ancho_upper, alto_upper = imagen_upper.size
     ancho_lower, alto_lower = imagen_lower.size
     ancho_combined = max(ancho_upper, ancho_lower)
@@ -32,6 +57,17 @@ def juntar_imagenes_vertical(imagen_upper, imagen_lower):
     return imagen_combined
 
 def rellenar_imagen_uniformemente(imagen_pil, dimensiones_objetivo, color_relleno=(255, 255, 255)):
+    """
+    Rellena una imagen con márgenes uniformes hasta alcanzar las dimensiones objetivo.
+    
+    Args:
+        imagen_pil (PIL.Image): Imagen a rellenar.
+        dimensiones_objetivo (tuple): Tupla (ancho, alto) con las dimensiones deseadas.
+        color_relleno (tuple, opcional): Color RGB para el relleno. Por defecto blanco (255, 255, 255).
+        
+    Returns:
+        PIL.Image: Imagen rellenada con márgenes uniformes.
+    """
     ancho_original, alto_original = imagen_pil.size
     ancho_objetivo, alto_objetivo = dimensiones_objetivo
     margen_izquierdo = (ancho_objetivo - ancho_original) // 2
@@ -44,6 +80,18 @@ def rellenar_imagen_uniformemente(imagen_pil, dimensiones_objetivo, color_rellen
     return imagen_rellena
 
 def recortar_imagen_uniformemente(imagen_pil, color_relleno=(255, 255, 255)):
+    """
+    Recorta los márgenes de una imagen de un color específico.
+    
+    Args:
+        imagen_pil (PIL.Image): Imagen a recortar.
+        color_relleno (tuple, opcional): Color RGB de los márgenes a recortar. Por defecto blanco (255, 255, 255).
+        
+    Returns:
+        tuple: Tupla conteniendo:
+            - PIL.Image: Imagen recortada.
+            - tuple: Coordenadas del recorte (x_min, y_min, x_max, y_max).
+    """
     imagen_np = np.array(imagen_pil)
     mask = np.any(imagen_np != color_relleno, axis=-1)
     if mask.any():

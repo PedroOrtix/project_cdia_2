@@ -24,6 +24,24 @@ scheduler = DDPMScheduler.from_pretrained('pt-sk/stable-diffusion-1.5', subfolde
 
 
 def inpaint(orig_i, prompt,keywords,positive_prompt,radio,slider_step,slider_guidance,slider_batch,slider_natural, global_dict):
+    """
+    Realiza el proceso de inpainting en una imagen utilizando un modelo de difusión de texto.
+    
+    Args:
+        orig_i (PIL.Image): Imagen original sobre la que se realizará el inpainting.
+        prompt (str): Texto descriptivo para guiar la generación.
+        keywords (str): Palabras clave adicionales para el proceso.
+        positive_prompt (str): Prompt positivo adicional.
+        radio (int): Radio para el proceso de inpainting.
+        slider_step (int): Número de pasos de difusión.
+        slider_guidance (float): Factor de guía para el proceso de difusión.
+        slider_batch (int): Tamaño del lote para procesamiento por batches.
+        slider_natural (bool): Si se debe usar procesamiento de lenguaje natural.
+        global_dict (dict): Diccionario con configuraciones globales.
+        
+    Returns:
+        tuple: Tupla conteniendo las imágenes generadas y el prompt compuesto utilizado.
+    """
 
     # print(type(i))
     # exit(0)

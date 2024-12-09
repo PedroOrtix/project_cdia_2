@@ -2,6 +2,17 @@ import re
 from prettytable import PrettyTable
 
 def separar_cadenas(lista):
+    """
+    Separa una lista de cadenas en dos categorías: alfabéticas y alfanuméricas.
+    
+    Args:
+        lista (list): Lista de cadenas a procesar.
+        
+    Returns:
+        dict: Diccionario con dos claves:
+            - 'alpha': Lista de cadenas que solo contienen letras.
+            - 'numeric': Lista de cadenas que contienen letras y/o números.
+    """
     # Inicializar el diccionario
     resultado = {
         "alpha": [],
@@ -22,6 +33,15 @@ def separar_cadenas(lista):
     return resultado
 
 def mostrar_diccionario_ascii(diccionario):
+    """
+    Muestra un diccionario en formato de tabla ASCII utilizando PrettyTable.
+    
+    Args:
+        diccionario (dict): Diccionario a mostrar en formato tabla.
+        
+    Returns:
+        None: Imprime la tabla en la consola.
+    """
     # Crear una tabla
     tabla = PrettyTable()
 

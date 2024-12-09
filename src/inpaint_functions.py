@@ -8,6 +8,14 @@ from PIL import Image, ImageDraw
 import string
 
 def add_tokens(tokenizer, text_encoder):
+    """
+    Añade tokens adicionales al tokenizador y redimensiona el codificador de texto.
+    Incluye tokens de coordenadas y caracteres.
+    
+    Args:
+        tokenizer (CLIPTokenizer): Tokenizador a modificar.
+        text_encoder (CLIPTextModel): Codificador de texto a redimensionar.
+    """
     #### additional tokens are introduced, including coordinate tokens and character tokens
     
     alphabet = string.digits + string.ascii_lowercase + string.ascii_uppercase + string.punctuation + ' '  # len(aphabet) = 95
@@ -28,6 +36,17 @@ def add_tokens(tokenizer, text_encoder):
 
 
 def format_prompt(draw, prompt, dict_stack):
+    """
+    Formatea un prompt añadiendo información de posición y texto para el proceso de inpainting.
+    
+    Args:
+        draw (PIL.ImageDraw.Draw): Objeto para dibujar en la imagen.
+        prompt (str): Prompt base.
+        dict_stack (list): Lista de tuplas (posición, texto) para el inpainting.
+        
+    Returns:
+        str: Prompt formateado con la información de posición y texto.
+    """
     user_prompt = prompt + ' <|endoftext|><|startoftext|>'
 
     for items in dict_stack:
@@ -54,6 +73,18 @@ def format_prompt(draw, prompt, dict_stack):
     return user_prompt
         
 def to_tensor(image):
+    """
+    Convierte una imagen a tensor de PyTorch.
+    
+    Args:
+        image (PIL.Image o numpy.ndarray): Imagen a convertir.
+        
+    Returns:
+        torch.Tensor: Tensor normalizado de la imagen.
+        
+    Raises:
+        TypeError: Si la imagen no es del tipo esperado.
+    """
     if isinstance(image, Image.Image):  
         image = np.array(image)
     elif not isinstance(image, np.ndarray):  
@@ -66,6 +97,16 @@ def to_tensor(image):
     return tensor
 
 def parse_bounds(bounds, wordlist):
+    """
+    Parsea los límites y palabras para el formato requerido por el inpainting.
+    
+    Args:
+        bounds (list): Lista de límites (bounds) de las palabras.
+        wordlist (list): Lista de palabras a procesar.
+        
+    Returns:
+        list: Lista formateada de límites y palabras.
+    """
     wordlist += [''] * (len(bounds) - len(wordlist))
     new_bounds = []
     for i in range(len(bounds)):

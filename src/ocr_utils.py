@@ -1,6 +1,15 @@
 import numpy as np
 
 def convert_paddle_to_easyocr(paddle_result):
+    """
+    Convierte el formato de resultados de PaddleOCR al formato de EasyOCR.
+    
+    Args:
+        paddle_result (list): Resultado del OCR en formato PaddleOCR.
+        
+    Returns:
+        list: Lista de tuplas en formato EasyOCR (bbox, texto, confianza).
+    """
     easyocr_result = []
     for block in paddle_result[0]:
         bbox = block[0]
@@ -10,6 +19,17 @@ def convert_paddle_to_easyocr(paddle_result):
     return easyocr_result
 
 def recalcular_cuadricula_rotada(cuadricula, palabra_original, palabra_objetivo):
+    """
+    Recalcula las coordenadas de una cuadrícula rotada para ajustarla a una nueva palabra.
+    
+    Args:
+        cuadricula (list): Lista de 4 puntos [p1, p2, p3, p4] que definen la cuadrícula original.
+        palabra_original (str): Palabra original contenida en la cuadrícula.
+        palabra_objetivo (str): Nueva palabra que se quiere ajustar.
+        
+    Returns:
+        list: Nueva cuadrícula con las coordenadas ajustadas al tamaño de la palabra objetivo.
+    """
     longitud_original = len(palabra_original)
     longitud_maxima_objetivo = len(palabra_objetivo) 
     
