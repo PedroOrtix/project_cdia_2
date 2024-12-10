@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image
 from .temperature_utils import calcular_temperatura, ajustar_temperatura
+import os
 
 def recortar_imagen(lista_palabras, palabra, img_array, ancho=512, alto=512):
     """
@@ -67,13 +68,13 @@ def recortar_imagen(lista_palabras, palabra, img_array, ancho=512, alto=512):
             return imagen_recortada, (x_min, y_min, x_max, y_max)
     return None, None
 
-def comparar_imagenes(image_path1, image_path2, coordinates, save_path=False, adjust_temp=False):
+def comparar_imagenes(imagen_original_pil, imagen_modificada_pil, coordinates, save_path=False, adjust_temp=False):
     """
     Compara dos imágenes mostrándolas lado a lado, con opción de ajuste de temperatura.
     
     Args:
-        image_path1 (str): Ruta de la primera imagen.
-        image_path2 (str): Ruta de la segunda imagen.
+        imagen_original_pil (PIL.Image): Imagen original en formato PIL.
+        imagen_modificada_pil (PIL.Image): Imagen modificada en formato PIL.
         coordinates (list): Lista de coordenadas [x1, y1, x2, y2, x3, y3, x4, y4] para el recorte.
         save_path (str, opcional): Ruta donde guardar las imágenes comparadas. Por defecto False.
         adjust_temp (bool, opcional): Si se debe ajustar la temperatura de color. Por defecto False.
@@ -81,8 +82,8 @@ def comparar_imagenes(image_path1, image_path2, coordinates, save_path=False, ad
     Returns:
         PIL.Image: Imagen combinada con ambas imágenes lado a lado.
     """
-    imagen_original = cv2.imread(image_path1)
-    imagen_modificada = cv2.imread(image_path2)
+    imagen_original = cv2.cvtColor(np.array(imagen_original_pil), cv2.COLOR_RGB2BGR)
+    imagen_modificada = cv2.cvtColor(np.array(imagen_modificada_pil), cv2.COLOR_RGB2BGR)
 
     x1, y1, x2, y2, x3, y3, x4, y4 = coordinates
     left = min(x1, x2, x3, x4)
@@ -110,8 +111,10 @@ def comparar_imagenes(image_path1, image_path2, coordinates, save_path=False, ad
     comparison_image.paste(imagen_ajustada_pil, (width, 0))
 
     if save_path:
-        imagen_original_pil.save(f"{save_path}/{image_path1.split('/')[-1].split('.')[0]}_cropped.jpg")
-        imagen_ajustada_pil.save(f"{save_path}/{image_path2.split('/')[-1].split('.')[0]}_cropped.jpg")
+        os.makedirs(save_path, exist_ok=True)
+        
+        imagen_original_pil.save(f"{save_path}/original_cropped.jpg")
+        imagen_ajustada_pil.save(f"{save_path}/modificada_cropped.jpg")
         comparison_image.save(f"{save_path}/comparison.jpg")
 
     return comparison_image
