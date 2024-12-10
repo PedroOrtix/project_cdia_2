@@ -1,13 +1,13 @@
-from td_inpaint import inpaint
-from inpaint_functions import parse_bounds
-from ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
-from image_utils import (
+from src.td_inpaint import inpaint
+from src.inpaint_functions import parse_bounds
+from src.ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
+from src.image_utils import (
     rellenar_imagen_uniformemente, 
     juntar_imagenes_vertical,
     recortar_imagen_uniformemente
 )
-from utils import separar_cadenas, mostrar_diccionario_ascii
-from crop_compare import recortar_imagen, comparar_imagenes, reemplazar_parte_imagen
+from src.utils import separar_cadenas, mostrar_diccionario_ascii
+from src.crop_compare import recortar_imagen, comparar_imagenes, reemplazar_parte_imagen
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -155,8 +155,6 @@ def process_image(palabra,
 
 def process_document_image(
     input_image_path: str,
-    word_to_replace: str,
-    replacement_word: str,
     output_dir: str = "images",
     steps: int = 30,
     guidance_scale: float = 2.0,
@@ -166,12 +164,11 @@ def process_document_image(
     lang: str = 'es'
 ) -> list:
     """
-    Procesa una imagen de documento para reemplazar texto específico.
+    Procesa una imagen de documento para reemplazar texto específico de manera interactiva,
+    siguiendo el pipeline del notebook.
 
     Args:
         input_image_path: Ruta de la imagen de entrada
-        word_to_replace: Palabra a reemplazar
-        replacement_word: Nueva palabra
         output_dir: Directorio donde guardar las imágenes resultantes
         steps: Número de pasos para el proceso de inpainting
         guidance_scale: Escala de guía para el proceso de inpainting
@@ -191,23 +188,72 @@ def process_document_image(
     # Crear directorio de salida si no existe
     os.makedirs(output_dir, exist_ok=True)
     
-    # Cargar y preparar la imagen
+    # 1. Primera detección de texto en la imagen original
+    print("\n=== Primera Detección de Texto en la Imagen Original ===")
+    print("Analizando imagen...")
     img = Image.open(input_image_path)
     img_array = np.array(img)
     
-    # Inicializar OCR
     model = PaddleOCR(use_angle_cls=True, lang=lang)
     result = model.ocr(img_array)
     bounds = convert_paddle_to_easyocr(result)
     
-    # Procesar la imagen
+    # Mostrar elementos detectados de manera estética
+    lista_elementos_detectados = [bound[1] for bound in bounds]
+    dict_elems = separar_cadenas(lista_elementos_detectados)
+    print("\n=== Elementos Detectados en Imagen Original ===")
+    mostrar_diccionario_ascii(dict_elems)
+    
+    # 2. Solicitar primera entrada del usuario
+    print("\n=== Selección de Texto a Reemplazar ===")
+    word_to_replace = input("Por favor, introduzca el texto que desea reemplazar: ")
+    replacement_word = input("Por favor, introduzca el nuevo texto: ")
+    
+    # 3. Recortar y procesar la imagen
+    print("\n=== Procesando y Recortando Imagen ===")
+    img_resized, coordenadas_originales = recortar_imagen(bounds, word_to_replace, img_array, alto=256, ancho=512)
+    img_pil = Image.fromarray(img_resized).convert('RGB')
+    
+    # Juntar imágenes y rellenar si es necesario
+    if 2*256 <= 512:
+        img_pil = juntar_imagenes_vertical(img_pil, img_pil)
+    img_pil = rellenar_imagen_uniformemente(img_pil, dimensiones_objetivo=(512, 512))
+    
+    if save_all_versions:
+        img_pil.save(os.path.join(output_dir, "imagen_recortada.jpg"))
+    
+    # 4. Segunda detección de texto en la imagen recortada
+    print("\n=== Segunda Detección de Texto en Imagen Recortada ===")
+    bounds_resized = model.ocr(np.array(img_pil))
+    bounds_resized = convert_paddle_to_easyocr(bounds_resized)
+    
+    lista_elementos_detectados = [bound[1] for bound in bounds_resized]
+    dict_elems = separar_cadenas(lista_elementos_detectados)
+    print("\n=== Elementos Detectados en Imagen Recortada ===")
+    mostrar_diccionario_ascii(dict_elems)
+    
+    # 5. Confirmar texto a reemplazar
+    print("\nPor motivos de la demo, por favor confirme el texto a reemplazar:")
+    word_to_replace_confirm = input("Confirme el texto a reemplazar: ")
+    
+    if word_to_replace_confirm != word_to_replace:
+        raise ValueError("Los textos a reemplazar no coinciden")
+    
+    # 6. Procesar la imagen
+    print("\n=== Iniciando Proceso de Reemplazo ===")
+    print(f"Reemplazando '{word_to_replace}' por '{replacement_word}'...")
+    
+    right_bounds = next(([bound] for bound in bounds_resized if bound[1] == word_to_replace), None)
+    if right_bounds is None:
+        raise ValueError(f"No se encontró la palabra '{word_to_replace}' en la imagen recortada")
+    
     modified_images, right_bounds, coordenadas_originales = process_image(
         palabra=word_to_replace,
         replace=replacement_word,
-        bounds=bounds,
+        bounds=bounds_resized,
         img_array=img_array,
-        height=256,
-        weight=512,
+        height=512,
+        width=512,
         slider_step=steps,
         slider_guidance=guidance_scale,
         slider_batch=batch_size,
@@ -215,13 +261,12 @@ def process_document_image(
         save_intermediate_images=save_all_versions
     )
     
+    # El resto del procesamiento permanece igual...
     processed_images = []
-    # Procesar todas las versiones
     for i, modified_image in enumerate(modified_images):
         img_pil = Image.open(input_image_path)
         coodinates = np.array(right_bounds[0][0], dtype=int).flatten()
         
-        # Reemplazar la parte modificada en la imagen original
         img_recortada_mod = reemplazar_parte_imagen(
             img_pil,
             modified_image,
@@ -229,18 +274,15 @@ def process_document_image(
             adjust_temp=False
         )
         
-        # Recortar y ajustar la imagen
         img_recortada_mod, _ = recortar_imagen_uniformemente(img_recortada_mod)
         img_recortada_mod = img_recortada_mod.crop(
             (0, 0, img_recortada_mod.width, img_recortada_mod.height//2)
         )
         
-        # Aplicar la modificación a la imagen original
         img_array_copy = img_array.copy()[:, :, :3]
         x_min, y_min, x_max, y_max = coordenadas_originales
         img_array_copy[y_min:y_max, x_min:x_max] = np.array(img_recortada_mod)[:, :, :]
         
-        # Guardar cada versión
         final_path = os.path.join(output_dir, f"resultado_final_version_{i+1}.jpg")
         Image.fromarray(img_array_copy).save(final_path)
         processed_images.append(final_path)
@@ -253,5 +295,9 @@ def process_document_image(
                 save_path=os.path.join(output_dir, f"comparison_version_{i+1}"),
                 adjust_temp=False
             )
+    
+    print("\n=== Proceso Completado ===")
+    print(f"Se han generado {len(processed_images)} versiones")
+    print(f"Las imágenes se han guardado en: {output_dir}")
     
     return processed_images
