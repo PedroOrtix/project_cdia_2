@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 from paddleocr import PaddleOCR
+import shutil  # Para crear el ZIP
 
 def simple_inpaint(image, bounds, word, slider_step=30, slider_guidance=2, slider_batch=6):
     """
@@ -169,6 +170,7 @@ def process_document_image(
     width: int = 512,
     save_all_versions: bool = True,
     show_comparison: bool = False,
+    save_zip: bool = False,
     lang: str = 'es'
 ) -> list:
     """
@@ -183,6 +185,7 @@ def process_document_image(
         batch_size: Número de variaciones a generar
         save_all_versions: Si es True, guarda todas las versiones generadas
         show_comparison: Si es True, muestra una comparación visual
+        save_zip: Si es True, guarda los resultados en un archivo ZIP. Por defecto False.
         lang: Idioma para el OCR ('es' para español)
         height: Altura de la imagen redimensionada. Por defecto 512.
            Si es 256, la imagen se duplicará verticalmente.
@@ -279,5 +282,20 @@ def process_document_image(
     print("\n=== Proceso Completado ===")
     print(f"Se han generado {len(processed_images)} versiones")
     print(f"Las imágenes se han guardado en: {output_dir}")
+    
+    # Crear archivo ZIP si se solicita
+    if save_zip:
+        # Crear nombre del archivo ZIP
+        config_str = f"{height}x{width}"
+        zip_name = f"resultados_{word_to_replace}_{replacement_word}_{config_str}.zip"
+        zip_path = os.path.join(os.path.dirname(output_dir), zip_name)
+        
+        # Comprimir la carpeta de resultados
+        shutil.make_archive(
+            os.path.splitext(zip_path)[0],  # Nombre base sin extensión
+            'zip',                          # Formato
+            output_dir                      # Carpeta a comprimir
+        )
+        print(f"\nSe ha creado el archivo ZIP: {zip_path}")
     
     return processed_images
