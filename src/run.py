@@ -1,9 +1,13 @@
 from td_inpaint import inpaint
 from inpaint_functions import parse_bounds
 from ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyocr
-from image_utils import rellenar_imagen_uniformemente, juntar_imagenes_vertical
+from image_utils import (
+    rellenar_imagen_uniformemente, 
+    juntar_imagenes_vertical,
+    recortar_imagen_uniformemente
+)
 from utils import separar_cadenas, mostrar_diccionario_ascii
-from crop_compare import recortar_imagen
+from crop_compare import recortar_imagen, comparar_imagenes, reemplazar_parte_imagen
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -148,3 +152,106 @@ def process_image(palabra,
         plt.show()
 
     return modified_images, right_bounds, coordenadas_originales
+
+def process_document_image(
+    input_image_path: str,
+    word_to_replace: str,
+    replacement_word: str,
+    output_dir: str = "images",
+    steps: int = 30,
+    guidance_scale: float = 2.0,
+    batch_size: int = 6,
+    save_all_versions: bool = True,
+    show_comparison: bool = False,
+    lang: str = 'es'
+) -> list:
+    """
+    Procesa una imagen de documento para reemplazar texto específico.
+
+    Args:
+        input_image_path: Ruta de la imagen de entrada
+        word_to_replace: Palabra a reemplazar
+        replacement_word: Nueva palabra
+        output_dir: Directorio donde guardar las imágenes resultantes
+        steps: Número de pasos para el proceso de inpainting
+        guidance_scale: Escala de guía para el proceso de inpainting
+        batch_size: Número de variaciones a generar
+        save_all_versions: Si es True, guarda todas las versiones generadas
+        show_comparison: Si es True, muestra una comparación visual
+        lang: Idioma para el OCR ('es' para español)
+
+    Returns:
+        list: Lista de rutas de todas las imágenes procesadas
+    """
+    import os
+    from PIL import Image
+    import numpy as np
+    from paddleocr import PaddleOCR
+    
+    # Crear directorio de salida si no existe
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Cargar y preparar la imagen
+    img = Image.open(input_image_path)
+    img_array = np.array(img)
+    
+    # Inicializar OCR
+    model = PaddleOCR(use_angle_cls=True, lang=lang)
+    result = model.ocr(img_array)
+    bounds = convert_paddle_to_easyocr(result)
+    
+    # Procesar la imagen
+    modified_images, right_bounds, coordenadas_originales = process_image(
+        palabra=word_to_replace,
+        replace=replacement_word,
+        bounds=bounds,
+        img_array=img_array,
+        height=256,
+        weight=512,
+        slider_step=steps,
+        slider_guidance=guidance_scale,
+        slider_batch=batch_size,
+        show_plot=show_comparison,
+        save_intermediate_images=save_all_versions
+    )
+    
+    processed_images = []
+    # Procesar todas las versiones
+    for i, modified_image in enumerate(modified_images):
+        img_pil = Image.open(input_image_path)
+        coodinates = np.array(right_bounds[0][0], dtype=int).flatten()
+        
+        # Reemplazar la parte modificada en la imagen original
+        img_recortada_mod = reemplazar_parte_imagen(
+            img_pil,
+            modified_image,
+            coodinates,
+            adjust_temp=False
+        )
+        
+        # Recortar y ajustar la imagen
+        img_recortada_mod, _ = recortar_imagen_uniformemente(img_recortada_mod)
+        img_recortada_mod = img_recortada_mod.crop(
+            (0, 0, img_recortada_mod.width, img_recortada_mod.height//2)
+        )
+        
+        # Aplicar la modificación a la imagen original
+        img_array_copy = img_array.copy()[:, :, :3]
+        x_min, y_min, x_max, y_max = coordenadas_originales
+        img_array_copy[y_min:y_max, x_min:x_max] = np.array(img_recortada_mod)[:, :, :]
+        
+        # Guardar cada versión
+        final_path = os.path.join(output_dir, f"resultado_final_version_{i+1}.jpg")
+        Image.fromarray(img_array_copy).save(final_path)
+        processed_images.append(final_path)
+        
+        if show_comparison:
+            comparar_imagenes(
+                input_image_path,
+                final_path,
+                coodinates,
+                save_path=os.path.join(output_dir, f"comparison_version_{i+1}"),
+                adjust_temp=False
+            )
+    
+    return processed_images
