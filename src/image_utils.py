@@ -100,3 +100,23 @@ def recortar_imagen_uniformemente(imagen_pil, color_relleno=(255, 255, 255)):
         imagen_recortada = imagen_pil.crop((x_min, y_min, x_max + 1, y_max + 1))
         return imagen_recortada, (x_min, y_min, x_max + 1, y_max + 1)
     return imagen_pil, (0, 0, imagen_pil.width, imagen_pil.height) 
+
+def juntar_imagenes_horizontal(img1, img2):
+    """
+    Junta dos imágenes horizontalmente.
+    
+    Args:
+        img1 (PIL.Image): Primera imagen
+        img2 (PIL.Image): Segunda imagen
+        
+    Returns:
+        PIL.Image: Imagen resultante de juntar las dos imágenes horizontalmente
+    """
+    total_width = img1.width + img2.width
+    max_height = max(img1.height, img2.height)
+    
+    nueva_img = Image.new('RGB', (total_width, max_height))
+    nueva_img.paste(img1, (0, 0))
+    nueva_img.paste(img2, (img1.width, 0))
+    
+    return nueva_img

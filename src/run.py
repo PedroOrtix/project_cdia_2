@@ -4,6 +4,7 @@ from src.ocr_utils import recalcular_cuadricula_rotada, convert_paddle_to_easyoc
 from src.image_utils import (
     rellenar_imagen_uniformemente, 
     juntar_imagenes_vertical,
+    juntar_imagenes_horizontal,
     recortar_imagen_uniformemente
 )
 from src.utils import separar_cadenas, mostrar_diccionario_ascii
@@ -66,8 +67,10 @@ def process_image(palabra,
         El array de la imagen donde se encuentra la palabra.
     height : int, opcional
         La altura de la imagen redimensionada. Por defecto 512.
+        Si es 256, la imagen se duplicará verticalmente para mantener el contexto.
     width : int, opcional
         El ancho de la imagen redimensionada. Por defecto 512.
+        Si es 256, la imagen se duplicará horizontalmente para mantener el contexto.
     slider_step : int, opcional
         El tamaño del paso para el slider. Por defecto 30.
     slider_guidance : float, opcional
@@ -88,15 +91,19 @@ def process_image(palabra,
     coordenadas_originales : list
         Las coordenadas originales del cuadro delimitador de la palabra en la imagen.
     """
-    # Step 1: Resize and crop the image based on the bounding box and the word to be replaced
+    # Step 1: Resize and crop the image
     img_resized, coordenadas_originales = recortar_imagen(bounds, palabra, img_array, alto=height, ancho=width)
     img_pil = Image.fromarray(img_resized).convert('RGB')
-    # juntamos la misma imagen verticalmente para que sea cuadrada junto al papping en blanco
-    # unicamente cuando el doble del alto sea menor que que 512px que lo que admite el modelo
-    if 2*height <= 512:
+    
+    # Si height es 256, juntar verticalmente para mantener el contexto
+    if height == 256:
         img_pil = juntar_imagenes_vertical(img_pil, img_pil)
-
-    # dimesion de la imagen nueva con la adición vertical para futura restauración del padding
+    
+    # Si width es 256, juntar horizontalmente
+    if width == 256:
+        img_pil = juntar_imagenes_horizontal(img_pil, img_pil)
+    
+    # Rellenar con padding si es necesario
     img_pil = rellenar_imagen_uniformemente(img_pil, dimensiones_objetivo=(512, 512))
         
     # Save the cropped and resized image for reference
@@ -158,6 +165,8 @@ def process_document_image(
     steps: int = 30,
     guidance_scale: float = 2.0,
     batch_size: int = 6,
+    height: int = 512,
+    width: int = 512,
     save_all_versions: bool = True,
     show_comparison: bool = False,
     lang: str = 'es'
@@ -175,6 +184,10 @@ def process_document_image(
         save_all_versions: Si es True, guarda todas las versiones generadas
         show_comparison: Si es True, muestra una comparación visual
         lang: Idioma para el OCR ('es' para español)
+        height: Altura de la imagen redimensionada. Por defecto 512.
+           Si es 256, la imagen se duplicará verticalmente.
+        width: Ancho de la imagen redimensionada. Por defecto 512.
+          Si es 256, la imagen se duplicará horizontalmente.
 
     Returns:
         list: Lista de rutas de todas las imágenes procesadas
@@ -213,8 +226,8 @@ def process_document_image(
         replace=replacement_word,
         bounds=bounds,
         img_array=img_array,
-        height=512,
-        width=512,
+        height=height,
+        width=width,
         slider_step=steps,
         slider_guidance=guidance_scale,
         slider_batch=batch_size,
@@ -236,9 +249,15 @@ def process_document_image(
         )
         
         img_recortada_mod, _ = recortar_imagen_uniformemente(img_recortada_mod)
-        img_recortada_mod = img_recortada_mod.crop(
-            (0, 0, img_recortada_mod.width, img_recortada_mod.height)
-        )
+        # Recortar según las dimensiones originales
+        if height == 256:
+            img_recortada_mod = img_recortada_mod.crop(
+                (0, 0, img_recortada_mod.width, img_recortada_mod.height//2)
+            )
+        if width == 256:
+            img_recortada_mod = img_recortada_mod.crop(
+                (0, 0, img_recortada_mod.width//2, img_recortada_mod.height)
+            )
         
         img_array_copy = img_array.copy()[:, :, :3]
         x_min, y_min, x_max, y_max = coordenadas_originales
