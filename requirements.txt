@@ -1,6 +1,7 @@
 numpy
 regex
 tqdm
+seaborn
 prettytable
 opencv-python
 paddlepaddle==2.6.1

@@ -10,3 +10,6 @@ __pycache__
 /notebooks
 /articles
 /results
+# ignorar archivos con 'paper' en el nombre excepto paper.pdf
+*paper*
+!paper.pdf
