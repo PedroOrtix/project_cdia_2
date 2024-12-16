@@ -33,7 +33,6 @@ def simple_inpaint(image, bounds, word, slider_step=30, slider_guidance=2, slide
     global_dict = {}
     global_dict["stack"] = parse_bounds(bounds, word)
     # print(global_dict["stack"])   
-    #image = "./hat.jpg"
     prompt = ""
     keywords = ""
     positive_prompt = ""
@@ -92,7 +91,7 @@ def process_image(palabra,
     coordenadas_originales : list
         Las coordenadas originales del cuadro delimitador de la palabra en la imagen.
     """
-    # Step 1: Resize and crop the image
+    # Paso 1: Redimensionar y recortar la imagen
     img_resized, coordenadas_originales = recortar_imagen(bounds, palabra, img_array, alto=height, ancho=width)
     img_pil = Image.fromarray(img_resized).convert('RGB')
     
@@ -107,18 +106,19 @@ def process_image(palabra,
     # Rellenar con padding si es necesario
     img_pil = rellenar_imagen_uniformemente(img_pil, dimensiones_objetivo=(512, 512))
         
-    # Save the cropped and resized image for reference
+    # Guardar la imagen recortada y redimensionada para referencia
     img_pil.save("images/imagen_dni_recortada.jpg")
 
     # Inicializar el modelo OCR Paddle
     model = PaddleOCR(use_angle_cls=True, lang='es')  # 'es' para español
-    # Step 2: Perform OCR on the resized and cropped image to identify word bounding boxes
+    
+    # Paso 2: Realizar OCR en la imagen redimensionada y recortada para identificar los cuadros delimitadores de palabras
     bounds_resized = model.ocr(np.array(img_pil))
     bounds_resized = convert_paddle_to_easyocr(bounds_resized)
     
-    # mostramos otra vez las palabras detectadas, pero de la imagen recortada 512x512
-    # reason: para que el usuario pueda ver las palabras detectadas y elegir la que desea reemplazar
-    # el modelo ocr puede detectar en la nueva imagen recortada palabras que no estaban en la imagen original
+    # Mostramos otra vez las palabras detectadas, pero de la imagen recortada 512x512
+    # Razón: para que el usuario pueda ver las palabras detectadas y elegir la que desea reemplazar
+    # El modelo OCR puede detectar en la nueva imagen recortada palabras que no estaban en la imagen original
     lista_elementos_detectados = []
     for bound in bounds_resized:
         lista_elementos_detectados.append(bound[1])
@@ -126,21 +126,21 @@ def process_image(palabra,
     dict_elems = separar_cadenas(lista_elementos_detectados)
     mostrar_diccionario_ascii(dict_elems)
     
-    # ask the user to input the word to be replaced
+    # Pedir al usuario que introduzca la palabra a reemplazar
     print("Por favor, introduzca la palabra a reemplazar: (por motivos de la demo)")
     palabra = input()
 
-    # Step 3: Find the bounding box that matches the word to be replaced
+    # Paso 3: Encontrar el cuadro delimitador que coincide con la palabra a reemplazar
     right_bounds = next(([bound] for bound in bounds_resized if bound[1] == palabra), None)
     if right_bounds is None:
         raise ValueError(f"No se encontró la palabra '{palabra}' en la imagen")
 
-    # Step 4: Recalculate the bounding box if necessary (e.g., if the replacement word is longer)
+    # Paso 4: Recalcular el cuadro delimitador si es necesario (por ejemplo, si la palabra de reemplazo es más larga)
     if palabra.isalpha() and len(palabra) < len(replace.strip()):
         right_bounds[0] = list(right_bounds[0])
         right_bounds[0][0] = recalcular_cuadricula_rotada(right_bounds[0][0], palabra, replace)
 
-    # Step 5: Perform inpainting to replace the word in the image
+    # Paso 5: Realizar el inpainting para reemplazar la palabra en la imagen
     modified_images, composed_prompt = simple_inpaint(img_pil,
                                                     right_bounds,
                                                     [replace],
@@ -148,7 +148,7 @@ def process_image(palabra,
                                                     slider_guidance=slider_guidance,
                                                     slider_batch=slider_batch)
 
-    # Step 6: Optionally display the results in a grid format (3x2)
+    # Paso 6: Opcionalmente mostrar los resultados en formato de cuadrícula (3x2)
     if show_plot:
         fig, axs = plt.subplots(slider_batch//2, 2, figsize=(10, 10))
         for i, ax in enumerate(axs.flatten()):
