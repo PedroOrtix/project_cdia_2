@@ -5,7 +5,7 @@
 
 ## 💻 Requisitos del Sistema
 
-- 🐍 Python 3.8+
+- 🐍 Python 3.10+
 - 🎮 CUDA compatible GPU (recomendado)
 - 🐧 Linux (probado en Fedora 41)
 
@@ -13,14 +13,14 @@
 
 1. 📥 Clonar el repositorio:
 ```bash
-git clone [URL_DEL_REPOSITORIO]
-cd [NOMBRE_DEL_REPOSITORIO]
+git clone https://github.com/PedroOrtix/project_cdia_2.git
+cd project_cdia_2
 ```
 
 2. 🌐 Crear un entorno virtual (recomendado):
 ```bash
-python -m venv venv
-source venv/bin/activate  # En Linux/Mac
+conda create -n project_cdia_2 python=3.11
+conda activate project_cdia_2  # En Linux/Mac
 ```
 
 3. 📦 Instalar las dependencias:
@@ -69,7 +69,3 @@ pip install -r requirements.txt
 1. 🚨 Error de CUDA:
    - ✅ Verificar la instalación de CUDA
    - ✅ Confirmar compatibilidad de versiones
-
-2. 💾 Problemas de memoria:
-   - ✅ Reducir el tamaño de las imágenes
-   - ✅ Procesar menos texto simultáneamente

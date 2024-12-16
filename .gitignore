@@ -13,3 +13,4 @@ __pycache__
 # ignorar archivos con 'paper' en el nombre excepto paper.pdf
 *paper*
 !paper.pdf
+!notebooks/notebook_text_inpaint_repo.ipynb
