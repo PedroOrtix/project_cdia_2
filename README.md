@@ -32,13 +32,9 @@ pip install -r requirements.txt
 
 ```
 .
-├── 📚 articles/                      # Artículos y papers de referencia
-├── 🖼️ images/                        # Imágenes de ejemplo y resultados
-├── 📄 images_dni/                    # Imágenes de DNI para pruebas
+├── 🖼️ images/                        # Imágenes
 ├── 📓 notebooks/
-│   ├── Florence_SAM.ipynb           # Notebook para análisis con Florence y SAM
-│   ├── notebook_prueba.ipynb        # Notebook de pruebas
-│   └── notebook_text_inpaint.ipynb  # Notebook principal con ejemplos
+│   └── notebook_text_inpaint_repo.ipynb  # Notebook principal con ejemplos
 ├── 📊 results/                       # Resultados de los experimentos
 ├── 🔧 src/
 │   ├── crop_compare.py             # Utilidades de recorte y comparación
@@ -51,7 +47,6 @@ pip install -r requirements.txt
 │   ├── td_inpaint.py             # Implementación de Text Detection Inpainting
 │   ├── temperature_utils.py       # Utilidades de análisis de temperatura
 │   └── utils.py                   # Utilidades generales
-├── 📝 paper.tex                     # Documento LaTeX del paper
 ├── 📄 paper.pdf                     # PDF del paper
 ├── ⚖️ LICENSE                        # Licencia del proyecto
 ├── 📖 README.md                     # Este archivo
