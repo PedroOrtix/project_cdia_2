@@ -7,7 +7,8 @@
 # ignore pycache
 __pycache__
 /images
-/notebooks
+/notebooks/**
+!/notebooks/notebook_text_inpaint_repo.ipynb
 /articles
 /results
 # ignorar archivos con 'paper' en el nombre excepto paper.pdf
